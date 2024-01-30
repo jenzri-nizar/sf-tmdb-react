@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  php:
+    build:
+      context: $APP
+      dockerfile: $DOCKER/docker/php/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}_php
+    user: "1000:1000"
+    networks:
+      - sf_test
+    depends_on:
+      - mysql
+    volumes:
+      - ./htdocs:/var/www/html
+    labels:
+      - "traefik.enable=true"
+  nginx:
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
+    image: nginx:stable-alpine
+    command: sh -c "nginx -g 'daemon off;'"
+    networks:
+      - sf_test
+    depends_on:
+      - php
+    volumes:
+      - ./docker/nginx/sites-enabled:/etc/nginx/conf.d
+      - ./htdocs:/var/www/html/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sf_test.rule=Host(`symfony.docker.localhost`)"
+      - "traefik.http.services.sf_test.loadbalancer.server.port=80"
+  mysql:
+    build:
+      context: $APP
+      dockerfile: $DOCKER/docker/mysql/Dockerfile
+
+    container_name: ${COMPOSE_PROJECT_NAME}_mysql
+    env_file: "docker/mysql.env"
+    networks:
+      - sf_test
+    platform: linux/amd64
+    volumes:
+      - mysql:/var/lib/mysql
+
+  adminer:
+    build:
+      context: $APP
+      dockerfile: $DOCKER/docker/adminer/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME}_adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    depends_on:
+      - mysql
+    networks:
+      - sf_test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sf_test-adminer.rule=Host(`adminer.symfony.docker.localhost`)"
+      - "traefik.http.services.sf_test-adminer.loadbalancer.server.port=8080"
+
+networks:
+  sf_test:
+    name: sf_test
+
+volumes:
+  mysql:

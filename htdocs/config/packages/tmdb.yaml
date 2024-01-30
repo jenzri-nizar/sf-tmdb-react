@@ -1,0 +1,24 @@
+tmdb_symfony:
+  api_key: '%env(resolve:TMDB_API_KEY)%'
+  options:
+    http:
+      client: Symfony\Component\HttpClient\Psr18Client
+      request_factory: Nyholm\Psr7\Factory\Psr17Factory
+      response_factory: Nyholm\Psr7\Factory\Psr17Factory
+      stream_factory: Nyholm\Psr7\Factory\Psr17Factory
+      uri_factory: Nyholm\Psr7\Factory\Psr17Factory
+    secure: true
+    host: api.themoviedb.org/3
+    guest_session_token: null
+    event_dispatcher:
+      adapter: event_dispatcher
+    hydration:
+      event_listener_handles_hydration: false
+      only_for_specified_models: {  }
+    api_token: '%env(resolve:TMDB_API_KEY)%' # you don't have to set this if you set it at the root level
+  session_token: null
+  repositories:
+    enabled: true
+  twig_extension:
+    enabled: true
+  disable_legacy_aliases: false
